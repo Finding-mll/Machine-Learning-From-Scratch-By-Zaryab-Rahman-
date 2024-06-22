@@ -1,7 +1,5 @@
-from __future__ import print_function, division
 import numpy as np
 import math
-from mlfromscratch.utils import normalize, polynomial_features
 
 # L1 Regularization class (for Lasso Regression)
 class L1Regularization:
@@ -91,11 +89,11 @@ class LassoRegression(Regression):
         super().__init__(n_iterations, learning_rate)
 
     def fit(self, X, y):
-        X = normalize(polynomial_features(X, degree=self.degree))
+        X = self.normalize(self.polynomial_features(X, degree=self.degree))
         super().fit(X, y)
 
     def predict(self, X):
-        X = normalize(polynomial_features(X, degree=self.degree))
+        X = self.normalize(self.polynomial_features(X, degree=self.degree))
         return super().predict(X)
 
 # Ridge Regression class
@@ -113,11 +111,11 @@ class PolynomialRegression(Regression):
         super().__init__(n_iterations, learning_rate)
 
     def fit(self, X, y):
-        X = polynomial_features(X, degree=self.degree)
+        X = self.polynomial_features(X, degree=self.degree)
         super().fit(X, y)
 
     def predict(self, X):
-        X = polynomial_features(X, degree=self.degree)
+        X = self.polynomial_features(X, degree=self.degree)
         return super().predict(X)
 
 # Polynomial Ridge Regression class
@@ -128,11 +126,11 @@ class PolynomialRidgeRegression(Regression):
         super().__init__(n_iterations, learning_rate)
 
     def fit(self, X, y):
-        X = normalize(polynomial_features(X, degree=self.degree))
+        X = self.normalize(self.polynomial_features(X, degree=self.degree))
         super().fit(X, y)
 
     def predict(self, X):
-        X = normalize(polynomial_features(X, degree=self.degree))
+        X = self.normalize(self.polynomial_features(X, degree=self.degree))
         return super().predict(X)
 
 # ElasticNet Regression class
@@ -143,9 +141,32 @@ class ElasticNet(Regression):
         super().__init__(n_iterations, learning_rate)
 
     def fit(self, X, y):
-        X = normalize(polynomial_features(X, degree=self.degree))
+        X = self.normalize(self.polynomial_features(X, degree=self.degree))
         super().fit(X, y)
 
     def predict(self, X):
-        X = normalize(polynomial_features(X, degree=self.degree))
+        X = self.normalize(self.polynomial_features(X, degree=self.degree))
         return super().predict(X)
+
+# Utility functions
+def normalize(X):
+    mean = np.mean(X, axis=0)
+    std = np.std(X, axis=0)
+    return (X - mean) / std
+
+def polynomial_features(X, degree):
+    n_samples, n_features = np.shape(X)
+    def index_combinations():
+        combs = [np.arange(n_features)]
+        for i in range(2, degree + 1):
+            combs.append(np.arange(n_features ** i).reshape(-1, n_features))
+        return combs
+    combs = index_combinations()
+    n_output_features = sum([len(comb) for comb in combs])
+    X_poly = np.empty((n_samples, n_output_features))
+    X_poly[:, :n_features] = X
+    for i in range(1, degree):
+        index = len(combs[i - 1])
+        for j, comb in enumerate(combs[i]):
+            X_poly[:, index + j] = np.prod(X[:, comb], axis=1)
+    return X_poly
